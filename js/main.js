@@ -157,13 +157,15 @@ chip8.prototype.run = function() {
 					);
 					this.pc = this.S[--this.sp];
 					this.S[this.sp] = 0x0;
-					return;
+					break;
 
 				default:
 					console.log("Bad op: " + hex(op, 4));
 					this.pc = 0xf000;
 					return
 			}
+			break;
+
 		case 0x2000: // Calls subroutine at NNN.
 			console.log(
 				hex(this.pc),
@@ -176,29 +178,33 @@ chip8.prototype.run = function() {
 			return
 
 		case 0x6000: // Sets VX to NN.
+			var X = (op & 0xf00) >> 8;
+			var NN = op & 0xff;
 			console.log(
 				hex(this.pc),
 				hex(op),
 				"Set V",
-				(op & 0xf00) >> 8,
+				X,
 				"TO",
-				hex(op & 0xff)
+				hex(NN)
 			);
-			this.V[(op & 0xf00) >> 8] = op & 0xff;
+			this.V[X] = NN;
 			break
+
 		case 0x7000: // Adds NN to VX.
 			var NN = op & 0xff;
-			var V = (op & 0xf00) >> 8;
+			var X = (op & 0xf00) >> 8;
 			console.log(
 				hex(this.pc),
 				hex(op),
 				"ADD",
 				hex(NN),
-				"TO V",
-				V,
-				hex(this.V[V])
+				"TO X",
+				X,
+				"VX",
+				hex(this.V[X])
 			);
-			this.V[V] += NN;
+			this.V[X] += NN;
 			break
 
 		case 0xa000: // Sets I to the address NNN.
@@ -303,7 +309,7 @@ chip8.prototype.run = function() {
 						num,
 						"IND",
 						hex(this.I),
-				 		"VALS",
+						"VALS",
 						this.M[i],
 						this.M[i+1],
 						this.M[i+2]);

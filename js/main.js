@@ -208,6 +208,40 @@ chip8.prototype.run = function() {
 			);
 			if (this.V[X] == NN)
 				this.pc+=2;
+			break;
+
+		case 0x4000: // Skips the next instruction if VX doesn't equal NN.
+			var X = (op & 0xf00) >> 8;
+			var NN = op & 0xff;
+			console.log(
+				hex(this.pc),
+				hex(op),
+				"compare ne",
+				"V"+X,
+				hex(this.V[X]),
+				"TO",
+				hex(NN)
+			);
+			if (this.V[X] != NN)
+				this.pc+=2;
+			break;
+
+		case 0x5000: // Skips the next instruction if VX equals VY.
+			var X = (op & 0xf00) >> 8;
+			var X = (op & 0xf0) >> 4;
+			console.log(
+				hex(this.pc),
+				hex(op),
+				"compare vx vy",
+				"V"+X,
+				"V"+Y,
+				hex(this.V[X]),
+				"TO",
+				hex(NN)
+			);
+			if (this.V[X] == this.V[Y])
+				this.pc+=2;
+			break;
 
 		case 0x6000: // Sets VX to NN.
 			var X = (op & 0xf00) >> 8;

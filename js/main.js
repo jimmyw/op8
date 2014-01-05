@@ -71,6 +71,7 @@ chip8.prototype.start = function(speed) {
 
 chip8.prototype.stop = function() {
 	clearInterval(this.tick_interval);
+	this.speed = 0;
 }
 
 // Chip8 memory, registers and stack

@@ -259,6 +259,24 @@ chip8.prototype.run = function() {
 			var found = 1;
 			switch (SI)	{
 
+				case 0x07: //Sets VX to the value of the delay timer.
+					var time_left = this.timer - new Date().getTime();
+					console.log(
+						hex(this.pc),
+						hex(op),
+						"Getting timer",
+						"V" + X,
+						"time_left",
+						time_left
+					);
+
+					if (time_left > 0) {
+						this.V[X] = time_left;
+					} else {
+						this.V[X] = 0;
+					}
+					break;
+
 				case 0x15: //Sets the delay timer to VX. (Timer is 60hz)
 					var VX = this.V[X];
 					this.timer = new Date().getTime() + (VX * 16.666)

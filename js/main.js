@@ -206,6 +206,25 @@ chip8.prototype.run = function() {
 			var found = 1;
 			switch (SI)	{
 				/*
+				 * Sets I to the location of the sprite for the character in VX.
+				 * Characters 0-F (in hexadecimal) are represented by a 4x5 font.
+				 */
+				case 0x29:
+					var vx = this.V[X];
+					// Fonts are stored at offset 0, with 5 alignment
+					this.I = vx * 5;
+					console.log(
+						hex(this.pc),
+						hex(op),
+						"Register",
+						X,
+						"Value",
+						hex(vx),
+						"To font addr addr",
+						hex(this.I)
+					)
+					break;
+				/*
 				 * Stores the Binary-coded decimal representation of VX, with the most significant of three digits
 				 * at the address in I, the middle digit at I plus 1, and the least significant digit at I plus 2.
 				 * (In other words, take the decimal representation of VX, place the hundreds digit in memory at location in I,

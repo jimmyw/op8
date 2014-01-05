@@ -120,9 +120,28 @@ chip8.prototype.run = function() {
 		return;
 	}
 	var op = this.opcode = this.M[this.pc] << 8 | this.M[this.pc + 1];
+
+	/*
+	 *  NNN: address
+	 * 	NN: 8-bit constant
+	 *	N: 4-bit constant
+	 *  X and Y: 4-bit register identifier
+	 */
 	switch (op & 0xF000) {
+		case 0x2000: // Calls subroutine at NNN.
+			console.log(
+				hex(this.pc),
+				hex(op),
+				"Call subroutine at",
+				hex(op & 0xfff)
+			);
+			this.S[this.sp++] = this.pc;
+			this.pc = op & 0xfff;
+			return
+		
 		case 0x6000: // Sets VX to NN.
 			console.log(
+				hex(this.pc),
 				hex(op),
 				"Set V",
 				(op & 0xf00) >> 8,
@@ -133,6 +152,7 @@ chip8.prototype.run = function() {
 			break
 		case 0xa000: // Sets I to the address NNN.
 			console.log(
+				hex(this.pc),
 				hex(op),
 				"Set I TO",
 				hex(op & 0xfff)
@@ -152,6 +172,7 @@ chip8.prototype.run = function() {
 			var Y = (op & 0x00f0) >> 4;
 			var H = (op & 0x000f);
 			console.log(
+				hex(this.pc),
 				hex(op),
 				"Draw sprite cordinate",
 				X, 

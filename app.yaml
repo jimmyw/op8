@@ -1,0 +1,18 @@
+application: myfirstop8
+version: 1
+runtime: python
+api_version: 1
+
+handlers:
+
+- url: /
+  upload: index.html
+  static_files: index.html
+
+- url: /js
+  static_dir: js
+- url: /css
+  static_dir: css
+- url: /GAMES
+  static_dir: GAMES
+

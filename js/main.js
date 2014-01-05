@@ -242,6 +242,20 @@ chip8.prototype.run = function() {
 			this.I = op & 0xfff;
 			break
 
+		case 0xc000: //Sets VX to a random number and NN.
+			var X = (op & 0x0f00) >> 8;
+			var NN = op & 0xff;
+			this.V[X] = parseInt(Math.random() * 0xff) & NN;
+			console.log(
+				hex(this.pc),
+				hex(op),
+				"Returning random number",
+				"V" + X,
+				hex(NN),
+				hex(this.V[X])
+			);
+			break
+
 		/*
 		 * Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels.
 		 * Each row of 8 pixels is read as bit-coded (with the most significant bit of each byte displayed on the left)

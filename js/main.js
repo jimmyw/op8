@@ -17,7 +17,7 @@ window.onload = function() {
 	xhr.onreadystatechange = function () {
 		if (xhr.readyState == xhr.DONE) {
 			if (xhr.status == 200 && xhr.response) {
-					new chip8(new Uint8Array(xhr.response)).run();
+					new chip8(new Uint8Array(xhr.response));
 			} else {
 				alert("Failed to download:" + xhr.status + " " + xhr.statusText);
 			}
@@ -47,6 +47,7 @@ function chip8(program) {
 	context.fillRect(30, 30, 50, 50);
 
 	setInterval(this.dump_memory.bind(this), 1000);
+	setInterval(this.run.bind(this), 10);
 }
 
 // Chip8 memory, registers and stack
@@ -97,7 +98,37 @@ chip8.prototype.dump_memory = function() {
 }
 
 chip8.prototype.run = function() {
-	this.opcode = this.M[this.pc] << 8 | this.M[this.pc + 1];
+	if (this.pc > 0xfff) {
+		return;
+	}
+	var op = this.opcode = this.M[this.pc] << 8 | this.M[this.pc + 1];
+	switch (op & 0xF000) {
+		case 0x6000: // Sets VX to NN.
+			console.log(
+				hex(op),
+				"Set V",
+				(op & 0xf00) >> 8,
+				"TO",
+				hex(op & 0xff)
+			);
+			this.V[(op & 0xf00) >> 8] = op & 0xff;
+			break
+		case 0xa000: // Sets I to the address NNN.
+			console.log(
+				hex(op),
+				"Set I TO",
+				hex(op & 0xfff)
+			);
+			this.I = op & 0xfff;
+			break
+		default:
+			console.log("Bad op: " + hex(op));
+			this.pc = 0xf000;
+			return
+
+	}
+
+	this.pc += 2;
 }
 
 

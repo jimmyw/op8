@@ -38,6 +38,12 @@ window.onload = function() {
 	xhr.send();
 }
 
+document.onkeydown = function(key) {
+	window.CHIP8.keyboard[key.keyCode] = true;
+}
+document.onkeyup = function(key) {
+	window.CHIP8.keyboard[key.keyCode] = false;
+}
 
 function chip8(program) {
 	this.program = program;
@@ -87,6 +93,7 @@ chip8.prototype.S = [0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
 chip8.prototype.G = new Uint8Array(64 * 32);
 chip8.prototype.M = new Uint8Array(4096);
 chip8.prototype.timer = 0;
+chip8.prototype.keyboard = {};
 
 
 
@@ -230,7 +237,37 @@ chip8.prototype.run = function() {
 				hex(this.V[X])
 			);
 			this.V[X] += NN;
-			break
+			break;
+		
+		case 0x8000:
+			var X = (op & 0xf00) >> 8;
+			var Y = (op & 0xf0) >> 4;
+			var Z = (op & 0xf);
+			switch(Z) {
+				case 0x0: // Sets VX to the value of VY.
+					this.V[X] = this.V[Y];
+					break;
+				case 0x1: // Sets VX to VX or VY.
+					this.V[X] |= this.V[Y];
+					break;
+				case 0x2: // Sets VX to VX and VY.
+					this.V[X] &= this.V[Y];
+					break;
+				case 0x3: // Sets VX to VX xor VY.
+					this.V[X] ^= this.V[Y];
+					break;
+				case 0x4: // Adds VY to VX. VF is set to 1 when there's a carry, and to 0 when there isn't.
+				case 0x5: // VY is subtracted from VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
+				case 0x6: // Shifts VX right by one. VF is set to the value of the least significant bit of VX before the shift.
+				case 0x7: // Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
+				case 0xe: // Shifts VX left by one. VF is set to the value of the most significant bit of VX before the shift.
+				default:
+					console.log("Bad op: " + hex(op, 4));
+					this.pc = 0xf000;
+					return
+			}
+			break;
+
 
 		case 0xa000: // Sets I to the address NNN.
 			console.log(
@@ -289,9 +326,24 @@ chip8.prototype.run = function() {
 
 				}
 			}
-
-
 			break;
+
+		case 0xe000: // 0xEX9E Skips the next instruction if the key stored in VX is pressed. 0xEXA1 if it isnt.
+			var X = (op & 0xf00) >> 8;
+			var NN = op & 0xff;
+			console.log(
+				hex(this.pc),
+				hex(op),
+				"keyboard compare",
+				"V"+X,
+				hex(this.V[X]),
+				"TO",
+				hex(NN)
+			);
+			if (!(NN == 0x9e ^ this.keyboard[this.V[X]]))
+				this.pc+=2;
+			break;
+
 		case 0xf000: /* F block is a collection of random instructions */
 			var X = (op & 0x0f00) >> 8;
 			var SI = op & 0xff;

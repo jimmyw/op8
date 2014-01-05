@@ -166,6 +166,16 @@ chip8.prototype.run = function() {
 			}
 			break;
 
+		case 0x1000: //Jumps to address NNN.
+			console.log(
+				hex(this.pc),
+				hex(op),
+				"Jump to inst",
+				hex(op & 0xfff)
+			);
+			this.pc = op & 0xfff;
+			return
+
 		case 0x2000: // Calls subroutine at NNN.
 			console.log(
 				hex(this.pc),
@@ -276,20 +286,20 @@ chip8.prototype.run = function() {
 
 				case 0x07: //Sets VX to the value of the delay timer.
 					var time_left = this.timer - parseInt(new Date().getTime());
+					if (time_left > 0) {
+						this.V[X] = time_left;
+					} else {
+						this.V[X] = 0;
+					}
 					console.log(
 						hex(this.pc),
 						hex(op),
 						"Getting timer",
 						"V" + X,
 						"time_left",
-						time_left
+						this.V[X]
 					);
 
-					if (time_left > 0) {
-						this.V[X] = time_left;
-					} else {
-						this.V[X] = 0;
-					}
 					break;
 
 				case 0x15: //Sets the delay timer to VX. (Timer is 60hz)

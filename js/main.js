@@ -27,7 +27,7 @@ window.onload = function() {
 	xhr.onreadystatechange = function () {
 		if (xhr.readyState == xhr.DONE) {
 			if (xhr.status == 200 && xhr.response) {
-					new chip8(new Uint8Array(xhr.response));
+				new chip8(new Uint8Array(xhr.response));
 			} else {
 				alert("Failed to download:" + xhr.status + " " + xhr.statusText);
 			}
@@ -46,16 +46,20 @@ function chip8(program) {
 	// Load fontset
 	for (var i=0; i < this.fontset.length; i++) {
 		this.M[i] = this.fontset[i]
-
 	}
+
+	// Load program
 	for (var i=0; i < this.program.length; i++) {
 		this.M[i + 0x200] = this.program[i]
 	}
+
+	// Setup canvas
 	this.context = document.getElementById('c').getContext('2d');
 	this.context.fillStyle = 'black';
 	this.context.fillRect(0, 0, this.zoom * 64, this.zoom * 32);
 	this.context.fillStyle = 'white';
 
+	// Start timers
 	setInterval(this.dump_memory.bind(this), 1000);
 	setInterval(this.run.bind(this), 10);
 }
@@ -221,7 +225,7 @@ chip8.prototype.run = function() {
 						"NUM",
 						num,
 						"IND",
-					 		hex(this.I),
+						hex(this.I),
 				 		"VALS",
 						this.M[i],
 						this.M[i+1],

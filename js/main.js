@@ -20,14 +20,13 @@ function bin(d, padding) {
 	return hex;
 }
 
-
 window.onload = function() {
 	var xhr = new XMLHttpRequest();
 
 	xhr.onreadystatechange = function () {
 		if (xhr.readyState == xhr.DONE) {
 			if (xhr.status == 200 && xhr.response) {
-				new chip8(new Uint8Array(xhr.response));
+				window.CHIP8 = new chip8(new Uint8Array(xhr.response));
 			} else {
 				alert("Failed to download:" + xhr.status + " " + xhr.statusText);
 			}
@@ -59,9 +58,22 @@ function chip8(program) {
 	this.context.fillRect(0, 0, this.zoom * 64, this.zoom * 32);
 	this.context.fillStyle = 'white';
 
+}
+
+chip8.prototype.start = function(speed) {
+	clearInterval(this.tick_interval);
+	clearInterval(this.dump_interval);
 	// Start timers
-	setInterval(this.dump_memory.bind(this), 100);
-	setInterval(this.run.bind(this), 1000);
+	this.speed = speed
+	this.tick_interval = setInterval(this.run.bind(this), speed);
+	if (this.speed <= 500) {
+		this.dump_interval = setInterval(this.dump_memory.bind(this), 500);
+	}
+}
+
+chip8.prototype.stop = function() {
+	clearInterval(this.tick_interval);
+	clearInterval(this.dump_interval);
 }
 
 // Chip8 memory, registers and stack
@@ -125,6 +137,8 @@ chip8.prototype.run = function() {
 	if (this.pc > 0xfff) {
 		return;
 	}
+	if (this.speed > 500)
+		setTimeout(this.dump_memory.bind(this), 10);
 	var op = this.opcode = this.M[this.pc] << 8 | this.M[this.pc + 1];
 
 	/*

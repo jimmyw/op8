@@ -57,6 +57,7 @@ function chip8(program) {
 	this.context.fillStyle = 'black';
 	this.context.fillRect(0, 0, this.zoom * 64, this.zoom * 32);
 	this.context.fillStyle = 'white';
+	setInterval(this.dump_memory.bind(this), 1000);
 
 }
 
@@ -66,14 +67,10 @@ chip8.prototype.start = function(speed) {
 	// Start timers
 	this.speed = speed
 	this.tick_interval = setInterval(this.run.bind(this), speed);
-	if (this.speed <= 500) {
-		this.dump_interval = setInterval(this.dump_memory.bind(this), 500);
-	}
 }
 
 chip8.prototype.stop = function() {
 	clearInterval(this.tick_interval);
-	clearInterval(this.dump_interval);
 }
 
 // Chip8 memory, registers and stack
@@ -137,7 +134,7 @@ chip8.prototype.run = function() {
 	if (this.pc > 0xfff) {
 		return;
 	}
-	if (this.speed > 500)
+	if (!this.speed || this.speed > 200)
 		setTimeout(this.dump_memory.bind(this), 10);
 	var op = this.opcode = this.M[this.pc] << 8 | this.M[this.pc + 1];
 

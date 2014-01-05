@@ -93,6 +93,7 @@ chip8.prototype.S = [0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
 chip8.prototype.G = new Uint8Array(64 * 32);
 chip8.prototype.M = new Uint8Array(4096);
 chip8.prototype.timer = 0;
+chip8.prototype.sound_timer = 0;
 chip8.prototype.keyboard = {};
 
 
@@ -129,6 +130,7 @@ chip8.prototype.dump_memory = function() {
 	buf += "<span class='head'>opcode: </span><span class='pc'>" + hex(this.opcode) + "</span>\n";
 	buf += "<span class='head'>I: </span><span class='pc'>" + hex(this.I) + "</span>\n";
 	buf += "<span class='head'>timer: </span><span class='pc'>" + this.timer + "</span>\n";
+	buf += "<span class='head'>sound_timer: </span><span class='pc'>" + this.sound_timer + "</span>\n";
 	buf += "<span class='head'>sp: </span><span class='pc'>" + hex(this.sp) + "</span>\n";
 	buf += "<span class='head'>V: </span>" + this.d(this.V);
 	buf += "<span class='head'>S: </span>" + this.d(this.S);
@@ -420,6 +422,17 @@ chip8.prototype.run = function() {
 						(VX * 16.666) + "ms"
 					);
 					break;
+				
+				case 0x18: //Sets the sond timer to VX. (Timer is 60hz)
+					var VX = this.V[X];
+					this.sound_timer = parseInt(new Date().getTime() + (VX * 16.666))
+					console.log(
+						hex(this.pc),
+						hex(op),
+						"Setting sound timer to",
+						(VX * 16.666) + "ms"
+					);
+					break;
 
 				/*
 				 * Sets I to the location of the sprite for the character in VX.
@@ -449,7 +462,7 @@ chip8.prototype.run = function() {
 				case 0x33:
 					var num = this.V[X]
 					var i = this.I + 2;
-					while (num > 0) { num = this.M[i--] = parseInt(x/10); }
+					while (num > 0) { num = this.M[i--] = parseInt(num/10); }
 					console.log(
 						hex(this.pc),
 						hex(op),

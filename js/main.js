@@ -188,17 +188,17 @@ chip8.prototype.run = function() {
 			break
 		case 0x7000: // Adds NN to VX.
 			var NN = op & 0xff;
-			var V = (op && 0xff) >> 8;
-			this.V[V] += NN;
+			var V = (op & 0xf00) >> 8;
 			console.log(
 				hex(this.pc),
 				hex(op),
 				"ADD",
-				NN,
+				hex(NN),
 				"TO V",
 				V,
-				this.V[V]
+				hex(this.V[V])
 			);
+			this.V[V] += NN;
 			break
 
 		case 0xa000: // Sets I to the address NNN.

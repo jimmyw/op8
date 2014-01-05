@@ -1,29 +1,29 @@
 
 function hex(d, padding) {
-    var hex = Number(d).toString(16);
-    padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
+	var hex = Number(d).toString(16);
+	padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
 
-    while (hex.length < padding) {
-        hex = "0" + hex;
-    }
+	while (hex.length < padding) {
+		hex = "0" + hex;
+	}
 
-    return hex;
+	return hex;
 }
 function bin(d, padding) {
-    var hex = Number(d).toString(2);
-    padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
+	var hex = Number(d).toString(2);
+	padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
 
-    while (hex.length < padding) {
-        hex = "0" + hex;
-    }
+	while (hex.length < padding) {
+		hex = "0" + hex;
+	}
 
-    return hex;
+	return hex;
 }
 
 
 window.onload = function() {
 	var xhr = new XMLHttpRequest();
- 
+
 	xhr.onreadystatechange = function () {
 		if (xhr.readyState == xhr.DONE) {
 			if (xhr.status == 200 && xhr.response) {
@@ -33,7 +33,7 @@ window.onload = function() {
 			}
 		}
 	}
- 
+
 	xhr.open("GET", "GAMES/PONG", true);
 	xhr.responseType = "arraybuffer";
 	xhr.send();
@@ -45,7 +45,7 @@ function chip8(program) {
 
 	// Load fontset
 	for (var i=0; i < this.fontset.length; i++) {
-		this.M[i] = this.fontset[i] 
+		this.M[i] = this.fontset[i]
 
 	}
 	for (var i=0; i < this.program.length; i++) {
@@ -67,16 +67,16 @@ chip8.prototype.opcode = 0;
 chip8.prototype.I = 0;
 chip8.prototype.sp = 0;
 chip8.prototype.V = [0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
-                     0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0]
+					 0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0]
 chip8.prototype.S = [0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
-                     0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0]
+					 0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0]
 chip8.prototype.G = new Uint8Array(64 * 32);
 chip8.prototype.M = new Uint8Array(4096);
 
 
 
 chip8.prototype.d = function(mem) {
-	var buf = "<span class='head'>   ";
+	var buf = "<span class='head'>	 ";
 	for (var i=0; i < 16; i++) {
 		buf += hex(i) + " ";
 	}
@@ -112,7 +112,7 @@ chip8.prototype.dump_memory = function() {
 	//buf += "<span class='head'>G: </span>" + this.d(this.G);
 	buf += "<span class='head'>M: </span>" + this.d(this.M);
 	document.getElementById("memory").innerHTML = buf;
-	
+
 }
 
 chip8.prototype.run = function() {
@@ -122,10 +122,10 @@ chip8.prototype.run = function() {
 	var op = this.opcode = this.M[this.pc] << 8 | this.M[this.pc + 1];
 
 	/*
-	 *  NNN: address
+	 *	NNN: address
 	 * 	NN: 8-bit constant
 	 *	N: 4-bit constant
-	 *  X and Y: 4-bit register identifier
+	 *	X and Y: 4-bit register identifier
 	 */
 	switch (op & 0xF000) {
 		case 0x2000: // Calls subroutine at NNN.
@@ -138,7 +138,7 @@ chip8.prototype.run = function() {
 			this.S[this.sp++] = this.pc;
 			this.pc = op & 0xfff;
 			return
-		
+
 		case 0x6000: // Sets VX to NN.
 			console.log(
 				hex(this.pc),
@@ -175,7 +175,7 @@ chip8.prototype.run = function() {
 				hex(this.pc),
 				hex(op),
 				"Draw sprite cordinate",
-				X, 
+				X,
 				Y,
 				"width 8 height",
 				H);
@@ -210,7 +210,7 @@ chip8.prototype.run = function() {
 				case 0x33:
 					var num = this.V[X]
 					var i = this.I + 2;
-					while (num > 0) { num = this.M[i--] = parseInt(x/10); }  
+					while (num > 0) { num = this.M[i--] = parseInt(x/10); }
 					console.log(
 						hex(this.pc),
 						hex(op),
@@ -220,14 +220,14 @@ chip8.prototype.run = function() {
 						hex(SI),
 						"NUM",
 						num,
-					    "IND",
-				   		hex(this.I),
-				 		"VALS",		
+						"IND",
+					 		hex(this.I),
+				 		"VALS",
 						this.M[i],
 						this.M[i+1],
 						this.M[i+2]);
-					
-					break;	
+
+					break;
 				default:
 					found=0;
 					break;
@@ -255,21 +255,21 @@ chip8.prototype.run = function() {
 chip8.prototype.zoom = 8;
 
 chip8.prototype.fontset = new Uint8Array(
-[ 
-  0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
-  0x20, 0x60, 0x20, 0x20, 0x70, // 1
-  0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
-  0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
-  0x90, 0x90, 0xF0, 0x10, 0x10, // 4
-  0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
-  0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
-  0xF0, 0x10, 0x20, 0x40, 0x40, // 7
-  0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
-  0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
-  0xF0, 0x90, 0xF0, 0x90, 0x90, // A
-  0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
-  0xF0, 0x80, 0x80, 0x80, 0xF0, // C
-  0xE0, 0x90, 0x90, 0x90, 0xE0, // D
-  0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-  0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+[
+	0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+	0x20, 0x60, 0x20, 0x20, 0x70, // 1
+	0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+	0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+	0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+	0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+	0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+	0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+	0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+	0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+	0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+	0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+	0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+	0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+	0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+	0xF0, 0x80, 0xF0, 0x80, 0x80	// F
 ]);

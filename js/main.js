@@ -219,9 +219,8 @@ chip8.prototype.run = function() {
 						hex(this.pc),
 						hex(op),
 						"X",
+						"Binary decimal split",
 						hex(X),
-						"SI",
-						hex(SI),
 						"NUM",
 						num,
 						"IND",
@@ -231,6 +230,21 @@ chip8.prototype.run = function() {
 						this.M[i+1],
 						this.M[i+2]);
 
+					break;
+				case 0x65: // Fills V0 to VX with values from memory starting at address I.
+					for (var i = 0; i < X; i++)
+						this.V[i] = this.M[this.I++]
+					console.log(
+						hex(this.pc),
+						hex(op),
+						"Fill Register from index",
+						"I",
+						hex(this.I),
+						"X",
+						hex(X),
+						this.M.subarray(this.I, this.I + X),
+						this.V
+					);
 					break;
 				default:
 					found=0;

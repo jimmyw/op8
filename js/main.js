@@ -81,7 +81,7 @@ chip8.prototype.timer = 0;
 
 
 chip8.prototype.d = function(mem) {
-	var buf = "<span class='head'>	 ";
+	var buf = "<span class='head'>   ";
 	for (var i=0; i < 16; i++) {
 		buf += hex(i) + " ";
 	}

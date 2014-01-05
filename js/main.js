@@ -184,7 +184,7 @@ chip8.prototype.run = function() {
 				for (var xline = 0; xline < 8; xline++) {
 					if ((pixel & (0x80 >> xline)) != 0) {
 						if(this.G[(X + xline + ((Y + yline) * 64))] == 1)
-							          this.V[0xF] = 1;
+							this.V[0xF] = 1;
 						this.G[X + xline + ((Y + yline) * 64)] ^= 1;
 						this.context.fillRect(this.zoom * (X + xline), this.zoom * (Y + yline), this.zoom, this.zoom);
 
@@ -196,6 +196,46 @@ chip8.prototype.run = function() {
 
 
 			break;
+		case 0xf000: /* F block is a collection of random instructions */
+			var X = (op & 0x0f00) >> 8;
+			var SI = op & 0xff;
+			var found = 1;
+			switch (SI)	{
+				/*
+				 * Stores the Binary-coded decimal representation of VX, with the most significant of three digits
+				 * at the address in I, the middle digit at I plus 1, and the least significant digit at I plus 2.
+				 * (In other words, take the decimal representation of VX, place the hundreds digit in memory at location in I,
+				 * the tens digit at location I+1, and the ones digit at location I+2.)
+				 */
+				case 0x33:
+					var num = this.V[X]
+					var i = this.I + 2;
+					while (num > 0) { num = this.M[i--] = parseInt(x/10); }  
+					console.log(
+						hex(this.pc),
+						hex(op),
+						"X",
+						hex(X),
+						"SI",
+						hex(SI),
+						"NUM",
+						num,
+					    "IND",
+				   		hex(this.I),
+				 		"VALS",		
+						this.M[i],
+						this.M[i+1],
+						this.M[i+2]);
+					
+					break;	
+				default:
+					found=0;
+					break;
+			}
+			if (found)
+				break;
+
+			// Fall thru
 
 
 		// Unknown operation

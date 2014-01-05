@@ -65,7 +65,7 @@ function chip8(program) {
 }
 
 // Chip8 memory, registers and stack
-chip8.prototype.program = null
+chip8.prototype.program = null;
 chip8.prototype.pc = 0x200;
 chip8.prototype.opcode = 0;
 chip8.prototype.I = 0;
@@ -76,6 +76,7 @@ chip8.prototype.S = [0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
 					 0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0]
 chip8.prototype.G = new Uint8Array(64 * 32);
 chip8.prototype.M = new Uint8Array(4096);
+chip8.prototype.timer = 0;
 
 
 
@@ -110,6 +111,7 @@ chip8.prototype.dump_memory = function() {
 	buf += "<span class='head'>pc: </span><span class='pc'>" + hex(this.pc) + "</span>\n";
 	buf += "<span class='head'>opcode: </span><span class='pc'>" + hex(this.opcode) + "</span>\n";
 	buf += "<span class='head'>I: </span><span class='pc'>" + hex(this.I) + "</span>\n";
+	buf += "<span class='head'>timer: </span><span class='pc'>" + this.timer + "</span>\n";
 	buf += "<span class='head'>sp: </span><span class='pc'>" + hex(this.sp) + "</span>\n";
 	buf += "<span class='head'>V: </span>" + this.d(this.V);
 	buf += "<span class='head'>S: </span>" + this.d(this.S);
@@ -154,6 +156,21 @@ chip8.prototype.run = function() {
 			);
 			this.V[(op & 0xf00) >> 8] = op & 0xff;
 			break
+		case 0x7000: // Adds NN to VX.
+			var NN = op & 0xff;
+			var V = (op && 0xff) >> 8;
+			this.V[V] += NN;
+			console.log(
+				hex(this.pc),
+				hex(op),
+				"ADD",
+				NN,
+				"TO V",
+				V,
+				this.V[V]
+			);
+			break
+
 		case 0xa000: // Sets I to the address NNN.
 			console.log(
 				hex(this.pc),
@@ -205,6 +222,18 @@ chip8.prototype.run = function() {
 			var SI = op & 0xff;
 			var found = 1;
 			switch (SI)	{
+
+				case 0x15: //Sets the delay timer to VX. (Timer is 60hz)
+					var VX = this.V[X];
+					this.timer = new Date().getTime() + (VX * 16.666)
+					console.log(
+						hex(this.pc),
+						hex(op),
+						"Setting timer to",
+						(VX * 16.666) + "ms"
+					);
+					break;
+
 				/*
 				 * Sets I to the location of the sprite for the character in VX.
 				 * Characters 0-F (in hexadecimal) are represented by a 4x5 font.

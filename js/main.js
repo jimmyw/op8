@@ -60,8 +60,8 @@ function chip8(program) {
 	this.context.fillStyle = 'white';
 
 	// Start timers
-	setInterval(this.dump_memory.bind(this), 1000);
-	setInterval(this.run.bind(this), 10);
+	setInterval(this.dump_memory.bind(this), 100);
+	setInterval(this.run.bind(this), 1000);
 }
 
 // Chip8 memory, registers and stack
@@ -91,7 +91,7 @@ chip8.prototype.d = function(mem) {
 		if (i%16 == 0) {
 			buf+="\n <span class='head'>" + hex(i, 4) + "</span> ";
 		}
-		if (i == this.pc)
+		if (i == this.pc || i == this.pc+1)
 			type = "pc";
 		else if (i >= 0x050 && i < 0x0a0)
 			type = "pixel_font_set";
@@ -134,6 +134,24 @@ chip8.prototype.run = function() {
 	 *	X and Y: 4-bit register identifier
 	 */
 	switch (op & 0xF000) {
+		case 0x0000:
+			switch(op) {
+				case 0x0ee: // Returns from subroutine.
+					console.log(
+						hex(this.pc),
+						hex(op),
+						"return",
+						hex(this.S[this.sp-1])
+					);
+					this.pc = this.S[--this.sp];
+					this.S[this.sp] = 0x0;
+					return;
+
+				default:
+					console.log("Bad op: " + hex(op, 4));
+					this.pc = 0xf000;
+					return
+			}
 		case 0x2000: // Calls subroutine at NNN.
 			console.log(
 				hex(this.pc),
@@ -306,7 +324,7 @@ chip8.prototype.run = function() {
 
 		// Unknown operation
 		default:
-			console.log("Bad op: " + hex(op));
+			console.log("Bad op: " + hex(op, 4));
 			this.pc = 0xf000;
 			return
 

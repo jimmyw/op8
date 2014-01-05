@@ -219,8 +219,8 @@ chip8.prototype.run = function() {
 		 * and to 0 if that doesn't happen.
 		 */
 		case 0xd000:
-			var X = (op & 0x0f00) >> 8;
-			var Y = (op & 0x00f0) >> 4;
+			var X = this.V[(op & 0x0f00) >> 8];
+			var Y = this.V[(op & 0x00f0) >> 4];
 			var H = (op & 0x000f);
 			console.log(
 				hex(this.pc),

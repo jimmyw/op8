@@ -177,6 +177,21 @@ chip8.prototype.run = function() {
 			this.pc = op & 0xfff;
 			return
 
+		case 0x3000: // Skips the next instruction if VX equals NN.
+			var X = (op & 0xf00) >> 8;
+			var NN = op & 0xff;
+			console.log(
+				hex(this.pc),
+				hex(op),
+				"compare",
+				"V"+X,
+				hex(this.V[X]),
+				"TO",
+				hex(NN)
+			);
+			if (this.V[X] == NN)
+				this.pc+=2;
+
 		case 0x6000: // Sets VX to NN.
 			var X = (op & 0xf00) >> 8;
 			var NN = op & 0xff;
@@ -260,7 +275,7 @@ chip8.prototype.run = function() {
 			switch (SI)	{
 
 				case 0x07: //Sets VX to the value of the delay timer.
-					var time_left = this.timer - new Date().getTime();
+					var time_left = this.timer - parseInt(new Date().getTime());
 					console.log(
 						hex(this.pc),
 						hex(op),
@@ -279,7 +294,7 @@ chip8.prototype.run = function() {
 
 				case 0x15: //Sets the delay timer to VX. (Timer is 60hz)
 					var VX = this.V[X];
-					this.timer = new Date().getTime() + (VX * 16.666)
+					this.timer = parseInt(new Date().getTime() + (VX * 16.666))
 					console.log(
 						hex(this.pc),
 						hex(op),

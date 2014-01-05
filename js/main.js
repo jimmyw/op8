@@ -360,9 +360,15 @@ chip8.prototype.run = function() {
 				var pixel = this.M[this.I + yline];
 				for (var xline = 0; xline < 8; xline++) {
 					if ((pixel & (0x80 >> xline)) != 0) {
-						if(this.G[(X + xline + ((Y + yline) * 64))] == 1)
+						var p = X + xline + ((Y + yline) * 64); 
+						if(this.G[p] == 1)
 							this.V[0xF] = 1;
-						this.G[X + xline + ((Y + yline) * 64)] ^= 1;
+						this.G[p] ^= 1;
+						if (this.G[p]) {
+							this.context.fillStyle = 'white';
+						} else {
+							this.context.fillStyle = 'black';
+						}
 						this.context.fillRect(this.zoom * (X + xline), this.zoom * (Y + yline), this.zoom, this.zoom);
 
 						//console.log(bin(pixel), X, xline, Y, yline);

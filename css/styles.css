@@ -1,0 +1,28 @@
+
+pre {
+	background-color: #000
+}
+
+.head {
+	color: #ff0000;
+}
+
+.font_set {
+	color: #005500;
+}
+
+.pixel_font_set {
+	color: #0000ff;
+}
+
+.program {
+	color: #550000;
+}
+
+.memory {
+	color: #005555;
+}
+
+.pc {
+	color: #ffffff;
+}

@@ -63,7 +63,11 @@ chip8.prototype.S = [0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
 chip8.prototype.M = new Uint8Array(4096);
 
 chip8.prototype.d = function(mem) {
-	var buf = ""
+	var buf = "<span class='head'>   ";
+	for (var i=0; i < 16; i++) {
+		buf += hex(i) + " ";
+	}
+	buf += "</span> ";
 	for (var i=0; i < mem.length; i++) {
 		var type = "";
 		if (i%16 == 0) {

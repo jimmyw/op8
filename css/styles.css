@@ -1,4 +1,7 @@
 
+canvas {
+	border: 1px solid #f00;
+}
 pre {
 	background-color: #000
 }

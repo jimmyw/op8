@@ -9,6 +9,16 @@ function hex(d, padding) {
 
     return hex;
 }
+function bin(d, padding) {
+    var hex = Number(d).toString(2);
+    padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
+
+    while (hex.length < padding) {
+        hex = "0" + hex;
+    }
+
+    return hex;
+}
 
 
 window.onload = function() {
@@ -41,10 +51,10 @@ function chip8(program) {
 	for (var i=0; i < this.program.length; i++) {
 		this.M[i + 0x200] = this.program[i]
 	}
-	var example = document.getElementById('c');
-	var context = example.getContext('2d');
-	context.fillStyle = 'red';
-	context.fillRect(30, 30, 50, 50);
+	this.context = document.getElementById('c').getContext('2d');
+	this.context.fillStyle = 'black';
+	this.context.fillRect(0, 0, this.zoom * 64, this.zoom * 32);
+	this.context.fillStyle = 'white';
 
 	setInterval(this.dump_memory.bind(this), 1000);
 	setInterval(this.run.bind(this), 10);
@@ -60,7 +70,10 @@ chip8.prototype.V = [0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
                      0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0]
 chip8.prototype.S = [0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
                      0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0]
+chip8.prototype.G = new Uint8Array(64 * 32);
 chip8.prototype.M = new Uint8Array(4096);
+
+
 
 chip8.prototype.d = function(mem) {
 	var buf = "<span class='head'>   ";
@@ -96,6 +109,7 @@ chip8.prototype.dump_memory = function() {
 	buf += "<span class='head'>sp: </span><span class='pc'>" + hex(this.sp) + "</span>\n";
 	buf += "<span class='head'>V: </span>" + this.d(this.V);
 	buf += "<span class='head'>S: </span>" + this.d(this.S);
+	//buf += "<span class='head'>G: </span>" + this.d(this.G);
 	buf += "<span class='head'>M: </span>" + this.d(this.M);
 	document.getElementById("memory").innerHTML = buf;
 	
@@ -125,6 +139,45 @@ chip8.prototype.run = function() {
 			);
 			this.I = op & 0xfff;
 			break
+
+		/*
+		 * Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels.
+		 * Each row of 8 pixels is read as bit-coded (with the most significant bit of each byte displayed on the left)
+		 * starting from memory location I; I value doesn't change after the execution of this instruction.
+		 * As described above, VF is set to 1 if any screen pixels are flipped from set to unset when the sprite is drawn,
+		 * and to 0 if that doesn't happen.
+		 */
+		case 0xd000:
+			var X = (op & 0x0f00) >> 8;
+			var Y = (op & 0x00f0) >> 4;
+			var H = (op & 0x000f);
+			console.log(
+				hex(op),
+				"Draw sprite cordinate",
+				X, 
+				Y,
+				"width 8 height",
+				H);
+			for (var yline = 0; yline < H; yline++) {
+				var pixel = this.M[this.I + yline];
+				for (var xline = 0; xline < 8; xline++) {
+					if ((pixel & (0x80 >> xline)) != 0) {
+						if(this.G[(X + xline + ((Y + yline) * 64))] == 1)
+							          this.V[0xF] = 1;
+						this.G[X + xline + ((Y + yline) * 64)] ^= 1;
+						this.context.fillRect(this.zoom * (X + xline), this.zoom * (Y + yline), this.zoom, this.zoom);
+
+						//console.log(bin(pixel), X, xline, Y, yline);
+					}
+
+				}
+			}
+
+
+			break;
+
+
+		// Unknown operation
 		default:
 			console.log("Bad op: " + hex(op));
 			this.pc = 0xf000;
@@ -136,7 +189,9 @@ chip8.prototype.run = function() {
 }
 
 
-	
+
+
+chip8.prototype.zoom = 8;
 
 chip8.prototype.fontset = new Uint8Array(
 [ 

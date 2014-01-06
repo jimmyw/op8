@@ -163,7 +163,6 @@ chip8.prototype.d = function(mem) {
 }
 
 chip8.prototype.dump_memory = function() {
-	return;
 	var buf = "";
 	buf += "<span class='head'>pc: </span><span class='pc'>" + hex(this.pc) + "</span>\n";
 	buf += "<span class='head'>c: </span><span class='pc'>" + this.c + "</span>\n";

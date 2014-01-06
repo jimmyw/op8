@@ -81,19 +81,20 @@ function chip8(program) {
 
 // Chip8 memory, registers and stack
 chip8.prototype.program = null;
-chip8.prototype.pc = 0x200;
-chip8.prototype.opcode = 0;
-chip8.prototype.I = 0; // 16 bits wide
-chip8.prototype.c = 0;
-chip8.prototype.sp = 0;
-chip8.prototype.V = new Uint8Array(16);
-chip8.prototype.S = new Uint16Array(16);
-chip8.prototype.G = new Uint8Array(64 * 32);
-chip8.prototype.M = new Uint8Array(4096);
-chip8.prototype.timer = 0;
-chip8.prototype.sound_timer = 0;
-chip8.prototype.keyboard = new Uint8Array(16);
-chip8.prototype.zoom = 8;
+chip8.prototype.pc = 0x200;                  // 0x200 is where our program is loaded.
+chip8.prototype.speed = 0;                   // ms. Timing < 100 makes 10 instruction or until 1 draw call each, timing >= 100 is just one instruction
+chip8.prototype.opcode = 0;                  // This is the current executing instruction.
+chip8.prototype.I = 0;                       // Indexregister, 16 bits wide
+chip8.prototype.c = 0;                       // Instruction counter, just for debug.
+chip8.prototype.sp = 0;                      // Stackpointer
+chip8.prototype.V = new Uint8Array(16);      // 16 - 8bit registers
+chip8.prototype.S = new Uint16Array(16);     // 16 - 16bit stack for return adresses
+chip8.prototype.G = new Uint8Array(64 * 32); // Graphic buffer, 64x32 pixels 8-bit
+chip8.prototype.M = new Uint8Array(4096);    // 4k 8-bit memory
+chip8.prototype.timer = 0;                   // This is set by a instrucion, and is unixtime.
+chip8.prototype.sound_timer = 0;             // This is just set, but sound are not played yet.
+chip8.prototype.keyboard = new Uint8Array(16); // This is a map of our keyboard. 1 means key is pressed. Multible keys can be pressed at once.
+chip8.prototype.zoom = 8;                    // This is the number of screen pixels, one super8 pixel is scaled up to.
 
 chip8.prototype.start = function(speed) {
 	clearInterval(this.tick_interval);

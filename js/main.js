@@ -600,7 +600,7 @@ chip8.prototype.step = function() {
 					break;
 
 				case 0x65: // Fills V0 to VX with values from memory starting at address I.
-					for (var i = 0; i < X; i++)
+					for (var i = 0; i <= X; i++)
 						this.V[i] = this.M[this.I+i]
 					/*console.log(
 						hex(this.pc),

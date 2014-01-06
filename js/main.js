@@ -153,6 +153,7 @@ chip8.prototype.step = function() {
 					this.S[this.sp] = 0x0;
 					break;
 				case 0x0e0: // Clears the screen.
+					this.G = new Uint8Array(64 * 32);
 					this.context.fillStyle = 'black';
 					this.context.fillRect(0, 0, this.zoom * 64, this.zoom * 32);
 					break;

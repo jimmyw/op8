@@ -218,6 +218,10 @@ chip8.prototype.step = function() {
 					this.pc = this.S[--this.sp];
 					this.S[this.sp] = 0x0;
 					break;
+				case 0x0e0: // Clears the screen.
+					this.context.fillStyle = 'black';
+					this.context.fillRect(0, 0, this.zoom * 64, this.zoom * 32);
+					break;
 
 				default:
 					console.log("Bad op: " + hex(op, 4));
@@ -470,6 +474,26 @@ chip8.prototype.step = function() {
 
 					break;
 
+				case 0x0a: //A key press is awaited, and then stored in VX.
+					var key = 0;
+					// Loop all keys, find first one pressed.
+					for (var i=0; i < this.keyboard.length; i++) {
+						if (this.keyboard[i]) {
+							key = i;
+							break;
+						}
+					}
+
+					// If a key was pressed.
+					if (key) {
+						// Store to vx.
+						this.V[X] = key;
+					} else {
+						// Return, with out increasing the pc will make emulator retry same instr and wait.
+						return;
+					}
+					break;
+
 				case 0x15: //Sets the delay timer to VX. (Timer is 60hz)
 					var VX = this.V[X];
 					this.timer = parseInt(new Date().getTime() + (VX * 16.666))
@@ -536,6 +560,24 @@ chip8.prototype.step = function() {
 						this.M[this.I+2]);*/
 
 					break;
+
+				case 0x55:
+					for (var i=0; i < X; i++) {
+						this.M[this.I + i] = this.V[i]
+					}
+					console.log(
+						hex(this.pc),
+						hex(op),
+						"Write memory to register",
+						"I" + hex(this.I),
+						"X" + hex(X),
+						this.M.subarray(this.I, this.I + X),
+						this.V
+					);
+					this.I += X + 1;
+
+					break;
+
 				case 0x65: // Fills V0 to VX with values from memory starting at address I.
 					for (var i = 0; i < X; i++)
 						this.V[i] = this.M[this.I++]
@@ -550,6 +592,7 @@ chip8.prototype.step = function() {
 						this.M.subarray(this.I, this.I + X),
 						this.V
 					);*/
+					this.I += X + 1;
 					break;
 				default:
 					found=0;

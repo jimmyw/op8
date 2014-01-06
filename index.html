@@ -12,13 +12,18 @@
 </head>
 <body>
 	<canvas id="c" width="512" height="256"></canvas>
+	<div class="controls">Controls:<br>1 2 3 4<br>Q W E R<br>A S D F<br>Z X C V</div>
+	<div class="inputs">
 	<input type="button" id="start" value="start" onclick="window.CHIP8.start(document.getElementById('speed').value);">
 	<input type="button" id="stop" value="stop" onclick="window.CHIP8.stop()">
 	<input type="button" id="step" value="step" onclick="window.CHIP8.run()">
-	<input type="input" id="speed" value="100">
+	speed:<input type="input" id="speed" value="100">
+	</div>
 
 	<pre id="memory"></pre>
 
-	<a href="https://github.com/jimmyw/op8">Get the source at github</a>
+	<div class="footer">
+		<a href="https://github.com/jimmyw/op8">Get the source at github</a>
+	</div>
 </body>
 </html>

@@ -1,7 +1,36 @@
 
+.controls {
+	float: left;
+	width: 100px;
+	background-color: #ccc;
+	margin: 10px;
+}
+
 canvas {
 	border: 1px solid #f00;
+	float: left;
+	margin: 10px;
 }
+
+.inputs {
+	float: left;
+	clear: left;
+	margin: 10px;
+}
+
+#memory {
+	float: left;
+	clear: left;
+	margin: 10px;
+}
+
+.footer {
+	margin: 10px;
+	float: left;
+	clear: left;
+}
+
+
 pre {
 	background-color: #000
 }

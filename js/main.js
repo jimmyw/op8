@@ -38,11 +38,34 @@ window.onload = function() {
 	xhr.send();
 }
 
+var keymap={
+	49: 0x1, // 1
+	50: 0x2, // 2
+	51: 0x3, // 3
+	52: 0xc, // 4
+	81: 0x4, // Q
+	87: 0x5, // W
+	69: 0x6, // E
+	82: 0xd, // R
+	65: 0x7, // A
+	83: 0x8, // S
+	68: 0x9, // D
+	70: 0xe, // F
+	90: 0xa, // Z
+	88: 0x0, // X
+	67: 0xb, // C
+	86: 0xf, // V
+};
+
 document.onkeydown = function(key) {
-	window.CHIP8.keyboard[key.keyCode] = true;
+	if (key.keyCode in keymap) {
+		window.CHIP8.keyboard[keymap[key.keyCode]] = 1;
+	}
 }
 document.onkeyup = function(key) {
-	window.CHIP8.keyboard[key.keyCode] = false;
+	if (key.keyCode in keymap) {
+		window.CHIP8.keyboard[keymap[key.keyCode]] = 0;
+	}
 }
 
 function chip8(program) {
@@ -95,7 +118,7 @@ chip8.prototype.G = new Uint8Array(64 * 32);
 chip8.prototype.M = new Uint8Array(4096);
 chip8.prototype.timer = 0;
 chip8.prototype.sound_timer = 0;
-chip8.prototype.keyboard = {};
+chip8.prototype.keyboard = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 
 
 
@@ -392,14 +415,15 @@ chip8.prototype.r = function() {
 		case 0xe000: // 0xEX9E Skips the next instruction if the key stored in VX is pressed. 0xEXA1 if it isnt.
 			var X = (op & 0xf00) >> 8;
 			var NN = op & 0xff;
-			/*console.log(
+			/*
+			console.log(
 				hex(this.pc),
 				hex(op),
-				"keyboard compare",
+				NN == 0x9e ? "keyboard compare" : "keybard N compare",
 				"V"+X,
-				hex(this.V[X]),
-				"TO",
-				hex(NN)
+				this.V[X],
+				hex(this.V[X], 1),
+				this.keyboard[this.V[X]]
 			);*/
 			if (!(NN == 0x9e ^ this.keyboard[this.V[X]]))
 				this.pc+=2;

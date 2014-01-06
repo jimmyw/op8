@@ -20,7 +20,12 @@ function bin(d, padding) {
 	return hex;
 }
 
-window.onload = function() {
+
+function LoadGame() {
+	if (window.CHIP8) {
+		window.CHIP8.stop();
+	}
+
 	var xhr = new XMLHttpRequest();
 
 	xhr.onreadystatechange = function () {
@@ -33,10 +38,16 @@ window.onload = function() {
 		}
 	}
 
-	xhr.open("GET", "GAMES/PONG", true);
+	if(window.location.search != "") {
+		xhr.open("GET", "GAMES/" + window.location.search.split("=")[1], true);
+	} else {
+		xhr.open("GET", "GAMES/PONG", true);
+	}
+
 	xhr.responseType = "arraybuffer";
 	xhr.send();
 }
+window.onload = LoadGame();
 
 var keymap={
 	49: 0x1, // 1
@@ -86,7 +97,6 @@ function chip8(program) {
 	this.context.fillStyle = 'black';
 	this.context.fillRect(0, 0, this.zoom * 64, this.zoom * 32);
 	this.context.fillStyle = 'white';
-	setInterval(this.dump_memory.bind(this), 1000);
 
 }
 
@@ -96,10 +106,14 @@ chip8.prototype.start = function(speed) {
 	// Start timers
 	this.speed = speed
 	this.tick_interval = setInterval(this.run.bind(this), speed);
+	if (speed <= 100) {
+		this.dump_interval = setInterval(this.dump_memory.bind(this), 1000);
+	}
 }
 
 chip8.prototype.stop = function() {
 	clearInterval(this.tick_interval);
+	clearInterval(this.dump_interval);
 	this.speed = 0;
 }
 
@@ -149,6 +163,7 @@ chip8.prototype.d = function(mem) {
 }
 
 chip8.prototype.dump_memory = function() {
+	return;
 	var buf = "";
 	buf += "<span class='head'>pc: </span><span class='pc'>" + hex(this.pc) + "</span>\n";
 	buf += "<span class='head'>c: </span><span class='pc'>" + this.c + "</span>\n";
@@ -166,25 +181,28 @@ chip8.prototype.dump_memory = function() {
 
 }
 chip8.prototype.run = function() {
+	if (this.pc > 0xfff) {
+		return;
+	}
 	if (!this.speed || this.speed > 100) {
 		setTimeout(this.dump_memory.bind(this), 10);
-		this.r();
+		this.step();
 	} else {
 		// Break on 0xd0 instruction that is a screen paint or every 20th instruction.
 		do {
-			this.r();
+			this.step();
 		}
-		while ((this.c % 20 != 0) && ((this.M[this.pc] & 0xf0) != 0xd0));
+		while ((this.c % 20 != 0) && ((this.M[this.pc] & 0xf0) != 0xd0) && this.pc <= 0xfff);
 	}
 }
 
-chip8.prototype.r = function() {
+chip8.prototype.step = function() {
 	var op = this.opcode = this.M[this.pc] << 8 | this.M[this.pc + 1];
 	this.c++;
 
 	/*
 	 *	NNN: address
-	 * 	NN: 8-bit constant
+	 *  NN: 8-bit constant
 	 *	N: 4-bit constant
 	 *	X and Y: 4-bit register identifier
 	 */

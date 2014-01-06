@@ -13,11 +13,41 @@
 <body>
 	<canvas id="c" width="512" height="256"></canvas>
 	<div class="controls">Controls:<br>1 2 3 4<br>Q W E R<br>A S D F<br>Z X C V</div>
+	<div class="games">
+		<a href="?game=15PUZZLE">15PUZZLE</a>
+		<a href="?game=BLINKY">BLINKY</a>
+		<a href="?game=BLITZ">BLITZ</a>
+		<a href="?game=BREAKOUT">BREAKOUT</a>
+		<a href="?game=BRIX">BRIX</a>
+		<a href="?game=CONNECT4">CONNTECT4</a>
+		<a href="?game=GUESS">GUESS</a>
+		<a href="?game=HIDDEN">HIDDEN</a>
+		<a href="?game=INVADERS">INVADERS</a>
+		<a href="?game=KALEID">KALEID</a>
+		<a href="?game=MAZE">MAZE</a>
+		<a href="?game=MERLIN">MERLIN</a>
+		<a href="?game=MISSILE">MISSILE</a>
+		<a href="?game=PONG">PONG</a>
+		<a href="?game=PONG2">PONG2</a>
+		<a href="?game=PUZZLE">PUZZLE</a>
+		<a href="?game=SQUASH">SQUASH</a>
+		<a href="?game=SYZYGY">SYZYGY</a>
+		<a href="?game=TANK">TANK</a>
+		<a href="?game=TETRIS">TETRIS</a>
+		<a href="?game=TICTAC">TICTAC</a>
+		<a href="?game=UFO">USO</a>
+		<a href="?game=VBRIX">VBRIX</a>
+		<a href="?game=VERS">VERS</a>
+		<a href="?game=WALL">WALL</a>
+		<a href="?game=WIPEOFF">WIPEOFF</a>
+	</div>
+
 	<div class="inputs">
 	<input type="button" id="start" value="start" onclick="window.CHIP8.start(document.getElementById('speed').value);">
 	<input type="button" id="stop" value="stop" onclick="window.CHIP8.stop()">
 	<input type="button" id="step" value="step" onclick="window.CHIP8.run()">
-	speed:<input type="input" id="speed" value="100">
+	<input type="button" id="reset" value="reset" onclick="LoadGame()">
+	speed:<input type="input" id="speed" value="20">
 	</div>
 
 	<pre id="memory"></pre>

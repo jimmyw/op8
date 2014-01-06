@@ -125,13 +125,12 @@ chip8.prototype.I = 0; // 16 bits wide
 chip8.prototype.c = 0;
 chip8.prototype.sp = 0;
 chip8.prototype.V = new Uint8Array(16);
-chip8.prototype.S = [0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
-					 0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0]
+chip8.prototype.S = new Uint16Array(16);
 chip8.prototype.G = new Uint8Array(64 * 32);
 chip8.prototype.M = new Uint8Array(4096);
 chip8.prototype.timer = 0;
 chip8.prototype.sound_timer = 0;
-chip8.prototype.keyboard = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+chip8.prototype.keyboard = new Uint8Array(16);
 
 
 
@@ -205,10 +204,10 @@ chip8.prototype.step = function() {
 	this.c++;
 
 	/*
-	 *	NNN: address
-	 *  NN: 8-bit constant
-	 *	N: 4-bit constant
-	 *	X and Y: 4-bit register identifier
+	 * NNN: address
+	 * NN: 8-bit constant
+	 * N: 4-bit constant
+	 * X and Y: 4-bit register identifier
 	 */
 	switch (op & 0xF000) {
 		case 0x0000:
@@ -594,7 +593,7 @@ chip8.prototype.step = function() {
 
 					break;
 
-				case 0x55:
+				case 0x55: // Stores V0 to VX in memory starting at address I.
 					for (var i=0; i <= X; i++) {
 						this.M[this.I + i] = this.V[i]
 					}
@@ -670,5 +669,5 @@ chip8.prototype.fontset = new Uint8Array(
 	0xF0, 0x80, 0x80, 0x80, 0xF0, // C
 	0xE0, 0x90, 0x90, 0x90, 0xE0, // D
 	0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-	0xF0, 0x80, 0xF0, 0x80, 0x80	// F
+	0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 ]);

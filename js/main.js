@@ -337,7 +337,7 @@ chip8.prototype.r = function() {
 		case 0xc000: //Sets VX to a random number and NN.
 			var X = (op & 0x0f00) >> 8;
 			var NN = op & 0xff;
-			this.V[X] = parseInt(Math.random() * 0xff) & NN;
+			this.V[X] = parseInt((Math.random() * 0xff) -1) & NN
 			/*console.log(
 				hex(this.pc),
 				hex(op),

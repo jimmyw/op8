@@ -335,7 +335,7 @@ chip8.prototype.step = function() {
 			);*/
 			this.V[X] += NN;
 			break;
-		
+
 		case 0x8000:
 			var X = (op & 0xf00) >> 8;
 			var Y = (op & 0xf0) >> 4;
@@ -428,7 +428,7 @@ chip8.prototype.step = function() {
 				var pixel = this.M[this.I + yline];
 				for (var xline = 0; xline < 8; xline++) {
 					if ((pixel & (0x80 >> xline)) != 0) {
-						var p = X + xline + ((Y + yline) * 64); 
+						var p = X + xline + ((Y + yline) * 64);
 						if(this.G[p] == 1)
 							this.V[0xF] = 1;
 						this.G[p] ^= 1;
@@ -519,7 +519,7 @@ chip8.prototype.step = function() {
 						(VX * 16.666) + "ms"
 					);*/
 					break;
-				
+
 				case 0x18: //Sets the sond timer to VX. (Timer is 60hz)
 					var VX = this.V[X];
 					this.sound_timer = parseInt(new Date().getTime() + (VX * 16.666))

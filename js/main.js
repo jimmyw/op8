@@ -219,7 +219,7 @@ chip8.prototype.step = function() {
 
 		case 0x5000: // Skips the next instruction if VX equals VY.
 			var X = (op & 0xf00) >> 8;
-			var X = (op & 0xf0) >> 4;
+			var Y = (op & 0xf0) >> 4;
 			/*console.log(
 				hex(this.pc),
 				hex(op),

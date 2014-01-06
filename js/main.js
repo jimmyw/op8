@@ -147,16 +147,22 @@ chip8.prototype.d = function(mem) {
 		if (i%16 == 0) {
 			buf+="\n <span class='head'>" + hex(i, 4) + "</span> ";
 		}
-		if (i == this.pc || i == this.pc+1)
-			type = "pc";
-		else if (i >= 0x050 && i < 0x0a0)
-			type = "pixel_font_set";
-		else if (i <= 0x1ff)
-			type = "font_set";
-		else if (i >= 0x200 && i < 0x200 + this.program.length)
-			type = "program";
-		else
-			type = "memory"
+		if (mem == this.M) {
+			if (i == this.pc || i == this.pc+1)
+				type = "pc";
+			else if (i == this.I)
+				type = "index";
+			else if (i >= 0x050 && i < 0x0a0)
+				type = "pixel_font_set";
+			else if (i <= 0x1ff)
+				type = "font_set";
+			else if (i >= 0x200 && i < 0x200 + this.program.length)
+				type = "program";
+			else
+				type = "memory";
+		} else {
+			type = "memory";
+		}
 		buf+= "<span class='" + type + "'>" + hex(mem[i]) + " </span>";
 	}
 	return buf + "\n";
@@ -488,8 +494,10 @@ chip8.prototype.step = function() {
 					if (key) {
 						// Store to vx.
 						this.V[X] = key;
+						console.log("Got key press: ", key);
 					} else {
 						// Return, with out increasing the pc will make emulator retry same instr and wait.
+						console.log("Waiting for keypress");
 						return;
 					}
 					break;
@@ -514,6 +522,19 @@ chip8.prototype.step = function() {
 						"Setting sound timer to",
 						(VX * 16.666) + "ms"
 					);*/
+					break;
+
+				case 0x1e: // Adds VX to I.
+					/*console.log(
+						hex(this.pc),
+						hex(op),
+						"add",
+						"V" + X,
+						hex(this.V[X]),
+						hex(this.I)
+					)*/
+					this.V[0xf] = (this.I + this.V[X]) > 0xfff ? 1 : 0;
+					this.I += this.V[X];
 					break;
 
 				/*
@@ -580,7 +601,7 @@ chip8.prototype.step = function() {
 
 				case 0x65: // Fills V0 to VX with values from memory starting at address I.
 					for (var i = 0; i < X; i++)
-						this.V[i] = this.M[this.I++]
+						this.V[i] = this.M[this.I+i]
 					/*console.log(
 						hex(this.pc),
 						hex(op),

@@ -379,6 +379,12 @@ chip8.prototype.step = function() {
 			}
 			break;
 
+		case 0x9000: // Skips the next instruction if VX doesn't equal VY.
+			var X = (op & 0xf00) >> 8;
+			var Y = (op & 0xf0) >> 4;
+			if (this.V[X] != this.V[Y])
+				this.pc += 2;
+			break;
 
 		case 0xa000: // Sets I to the address NNN.
 			/*console.log(
@@ -500,10 +506,10 @@ chip8.prototype.step = function() {
 					if (key) {
 						// Store to vx.
 						this.V[X] = key;
-						console.log("Got key press: ", key);
+						// console.log("Got key press: ", key);
 					} else {
 						// Return, with out increasing the pc will make emulator retry same instr and wait.
-						console.log("Waiting for keypress");
+						// console.log("Waiting for keypress");
 						return;
 					}
 					break;
@@ -589,18 +595,18 @@ chip8.prototype.step = function() {
 					break;
 
 				case 0x55:
-					for (var i=0; i < X; i++) {
+					for (var i=0; i <= X; i++) {
 						this.M[this.I + i] = this.V[i]
 					}
-					console.log(
+					/*console.log(
 						hex(this.pc),
 						hex(op),
 						"Write memory to register",
 						"I" + hex(this.I),
 						"X" + hex(X),
-						this.M.subarray(this.I, this.I + X),
+						this.M.subarray(this.I, this.I + X + 1),
 						this.V
-					);
+					);*/
 					this.I += X + 1;
 
 					break;

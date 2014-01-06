@@ -477,23 +477,22 @@ chip8.prototype.r = function() {
 				 * the tens digit at location I+1, and the ones digit at location I+2.)
 				 */
 				case 0x33:
-					var num = this.V[X]
-					var i = this.I + 2;
-					while (num > 0) { num = this.M[i--] = parseInt(num/10); }
-					/*console.log(
+					this.M[this.I]     = parseInt(this.V[X] / 100);
+					this.M[this.I + 1] = parseInt(this.V[X] / 10) % 10;
+					this.M[this.I + 2] = parseInt(this.V[X] % 100) % 10;
+					/*
+					console.log(
 						hex(this.pc),
 						hex(op),
 						"X",
 						"Binary decimal split",
-						hex(X),
-						"NUM",
-						num,
+						this.V[X],
 						"IND",
 						hex(this.I),
 						"VALS",
-						this.M[i],
-						this.M[i+1],
-						this.M[i+2]);*/
+						this.M[this.I],
+						this.M[this.I+1],
+						this.M[this.I+2]);*/
 
 					break;
 				case 0x65: // Fills V0 to VX with values from memory starting at address I.

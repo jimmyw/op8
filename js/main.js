@@ -1,26 +1,4 @@
 
-function hex(d, padding) {
-	var hex = Number(d).toString(16);
-	padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
-
-	while (hex.length < padding) {
-		hex = "0" + hex;
-	}
-
-	return hex;
-}
-function bin(d, padding) {
-	var hex = Number(d).toString(2);
-	padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
-
-	while (hex.length < padding) {
-		hex = "0" + hex;
-	}
-
-	return hex;
-}
-
-
 function LoadGame() {
 	if (window.CHIP8) {
 		window.CHIP8.stop();
@@ -47,7 +25,7 @@ function LoadGame() {
 	xhr.responseType = "arraybuffer";
 	xhr.send();
 }
-window.onload = LoadGame();
+window.onload = LoadGame;
 
 var keymap={
 	49: 0x1, // 1
@@ -79,6 +57,7 @@ document.onkeyup = function(key) {
 	}
 }
 
+// This is our main initialize
 function chip8(program) {
 	this.program = program;
 
@@ -87,7 +66,7 @@ function chip8(program) {
 		this.M[i] = this.fontset[i]
 	}
 
-	// Load program
+	// Load program into memory on adress 0x200
 	for (var i=0; i < this.program.length; i++) {
 		this.M[i + 0x200] = this.program[i]
 	}
@@ -99,6 +78,22 @@ function chip8(program) {
 	this.context.fillStyle = 'white';
 
 }
+
+// Chip8 memory, registers and stack
+chip8.prototype.program = null;
+chip8.prototype.pc = 0x200;
+chip8.prototype.opcode = 0;
+chip8.prototype.I = 0; // 16 bits wide
+chip8.prototype.c = 0;
+chip8.prototype.sp = 0;
+chip8.prototype.V = new Uint8Array(16);
+chip8.prototype.S = new Uint16Array(16);
+chip8.prototype.G = new Uint8Array(64 * 32);
+chip8.prototype.M = new Uint8Array(4096);
+chip8.prototype.timer = 0;
+chip8.prototype.sound_timer = 0;
+chip8.prototype.keyboard = new Uint8Array(16);
+chip8.prototype.zoom = 8;
 
 chip8.prototype.start = function(speed) {
 	clearInterval(this.tick_interval);
@@ -117,72 +112,6 @@ chip8.prototype.stop = function() {
 	this.speed = 0;
 }
 
-// Chip8 memory, registers and stack
-chip8.prototype.program = null;
-chip8.prototype.pc = 0x200;
-chip8.prototype.opcode = 0;
-chip8.prototype.I = 0; // 16 bits wide
-chip8.prototype.c = 0;
-chip8.prototype.sp = 0;
-chip8.prototype.V = new Uint8Array(16);
-chip8.prototype.S = new Uint16Array(16);
-chip8.prototype.G = new Uint8Array(64 * 32);
-chip8.prototype.M = new Uint8Array(4096);
-chip8.prototype.timer = 0;
-chip8.prototype.sound_timer = 0;
-chip8.prototype.keyboard = new Uint8Array(16);
-
-
-
-chip8.prototype.d = function(mem) {
-	var buf = "<span class='head'>   ";
-	for (var i=0; i < 16; i++) {
-		buf += hex(i) + " ";
-	}
-	buf += "</span> ";
-	for (var i=0; i < mem.length; i++) {
-		var type = "";
-		if (i%16 == 0) {
-			buf+="\n <span class='head'>" + hex(i, 4) + "</span> ";
-		}
-		if (mem == this.M) {
-			if (i == this.pc || i == this.pc+1)
-				type = "pc";
-			else if (i == this.I)
-				type = "index";
-			else if (i >= 0x050 && i < 0x0a0)
-				type = "pixel_font_set";
-			else if (i <= 0x1ff)
-				type = "font_set";
-			else if (i >= 0x200 && i < 0x200 + this.program.length)
-				type = "program";
-			else
-				type = "memory";
-		} else {
-			type = "memory";
-		}
-		buf+= "<span class='" + type + "'>" + hex(mem[i]) + " </span>";
-	}
-	return buf + "\n";
-}
-
-chip8.prototype.dump_memory = function() {
-	var buf = "";
-	buf += "<span class='head'>pc: </span><span class='pc'>" + hex(this.pc) + "</span>\n";
-	buf += "<span class='head'>c: </span><span class='pc'>" + this.c + "</span>\n";
-	buf += "<span class='head'>speed: </span><span class='pc'>" + this.speed + "</span>\n";
-	buf += "<span class='head'>opcode: </span><span class='pc'>" + hex(this.opcode) + "</span>\n";
-	buf += "<span class='head'>I: </span><span class='pc'>" + hex(this.I) + "</span>\n";
-	buf += "<span class='head'>timer: </span><span class='pc'>" + this.timer + "</span>\n";
-	buf += "<span class='head'>sound_timer: </span><span class='pc'>" + this.sound_timer + "</span>\n";
-	buf += "<span class='head'>sp: </span><span class='pc'>" + hex(this.sp) + "</span>\n";
-	buf += "<span class='head'>V: </span>" + this.d(this.V);
-	buf += "<span class='head'>S: </span>" + this.d(this.S);
-	//buf += "<span class='head'>G: </span>" + this.d(this.G);
-	buf += "<span class='head'>M: </span>" + this.d(this.M);
-	document.getElementById("memory").innerHTML = buf;
-
-}
 chip8.prototype.run = function() {
 	if (this.pc > 0xfff) {
 		return;
@@ -395,6 +324,11 @@ chip8.prototype.step = function() {
 			this.I = op & 0xfff;
 			break
 
+		case 0xb000: // Jumps to the address NNN plus V0.
+			var NNN = op & 0xfff;
+			this.pc = NNN + this.V[0];
+			return
+
 		case 0xc000: //Sets VX to a random number and NN.
 			var X = (op & 0x0f00) >> 8;
 			var NN = op & 0xff;
@@ -442,10 +376,7 @@ chip8.prototype.step = function() {
 							this.context.fillStyle = 'black';
 						}
 						this.context.fillRect(this.zoom * (X + xline), this.zoom * (Y + yline), this.zoom, this.zoom);
-
-						//console.log(bin(pixel), X, xline, Y, yline);
 					}
-
 				}
 			}
 			break;
@@ -647,10 +578,52 @@ chip8.prototype.step = function() {
 	this.pc += 2;
 }
 
+// These 2 function is only for prinitng memory debug table.
+chip8.prototype.d = function(mem) {
+	var buf = "<span class='head'>   ";
+	for (var i=0; i < 16; i++) {
+		buf += hex(i) + " ";
+	}
+	buf += "</span> ";
+	for (var i=0; i < mem.length; i++) {
+		var type = "memory";
+		if (i%16 == 0) {
+			buf+="\n <span class='head'>" + hex(i, 4) + "</span> ";
+		}
+		if (mem == this.M) {
+			if (i == this.pc || i == this.pc+1)
+				type = "pc";
+			else if (i == this.I)
+				type = "index";
+			else if (i >= 0x050 && i < 0x0a0)
+				type = "pixel_font_set";
+			else if (i <= 0x1ff)
+				type = "font_set";
+			else if (i >= 0x200 && i < 0x200 + this.program.length)
+				type = "program";
+		}
+		buf+= "<span class='" + type + "'>" + hex(mem[i]) + " </span>";
+	}
+	return buf + "\n";
+}
 
+chip8.prototype.dump_memory = function() {
+	var buf = "";
+	buf += "<span class='head'>pc: </span><span class='pc'>" + hex(this.pc) + "</span>\n";
+	buf += "<span class='head'>c: </span><span class='pc'>" + this.c + "</span>\n";
+	buf += "<span class='head'>speed: </span><span class='pc'>" + this.speed + "</span>\n";
+	buf += "<span class='head'>opcode: </span><span class='pc'>" + hex(this.opcode) + "</span>\n";
+	buf += "<span class='head'>I: </span><span class='pc'>" + hex(this.I) + "</span>\n";
+	buf += "<span class='head'>timer: </span><span class='pc'>" + this.timer + "</span>\n";
+	buf += "<span class='head'>sound_timer: </span><span class='pc'>" + this.sound_timer + "</span>\n";
+	buf += "<span class='head'>sp: </span><span class='pc'>" + hex(this.sp) + "</span>\n";
+	buf += "<span class='head'>V: </span>" + this.d(this.V);
+	buf += "<span class='head'>S: </span>" + this.d(this.S);
+	//buf += "<span class='head'>G: </span>" + this.d(this.G);
+	buf += "<span class='head'>M: </span>" + this.d(this.M);
+	document.getElementById("memory").innerHTML = buf;
 
-
-chip8.prototype.zoom = 8;
+}
 
 chip8.prototype.fontset = new Uint8Array(
 [
@@ -671,3 +644,15 @@ chip8.prototype.fontset = new Uint8Array(
 	0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
 	0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 ]);
+
+// Just for nice debug prints
+function hex(d, padding) {
+	var hex = Number(d).toString(16);
+	padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
+
+	while (hex.length < padding) {
+		hex = "0" + hex;
+	}
+
+	return hex;
+}

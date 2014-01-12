@@ -99,11 +99,13 @@ chip8.prototype.zoom = 8;                    // This is the number of screen pix
 chip8.prototype.start = function(speed) {
 	clearInterval(this.tick_interval);
 	clearInterval(this.dump_interval);
+	clearInterval(this.disasm);
 	// Start timers
 	this.speed = speed
 	this.tick_interval = setInterval(this.run.bind(this), speed);
 	if (speed <= 100) {
 		this.dump_interval = setInterval(this.dump_memory.bind(this), 1000);
+		this.dump_interval = setInterval(this.disasm.bind(this), 1000);
 	}
 }
 
@@ -119,6 +121,7 @@ chip8.prototype.run = function() {
 	}
 	if (!this.speed || this.speed > 100) {
 		setTimeout(this.dump_memory.bind(this), 10);
+		setTimeout(this.disasm.bind(this), 10);
 		this.step();
 	} else {
 		// Break on 0xd0 instruction that is a screen paint or every 20th instruction.
@@ -624,6 +627,244 @@ chip8.prototype.dump_memory = function() {
 	//buf += "<span class='head'>G: </span>" + this.d(this.G);
 	buf += "<span class='head'>M: </span>" + this.d(this.M);
 	document.getElementById("memory").innerHTML = buf;
+
+}
+
+chip8.prototype.disasm = function() {
+	var buf = "";
+	for (var i=0x200; i < (0x200 + this.program.length); i+=2) {
+		if (i == this.pc || i == this.pc + 1) {
+			buf+="\n <span class='index'>" + hex(i, 4) + "</span> ";
+		} else {
+			buf+="\n <span class='head'>" + hex(i, 4) + "</span> ";
+		}
+		if (i % 2 == 1) {
+			continue;
+		}
+		var op = this.M[i] << 8 | this.M[i + 1];
+		I = {};
+		switch (op & 0xF000) {
+			case 0x0000:
+				switch(op) {
+					case 0x0e0:
+						I.D = "Clears the screen.";
+						I.C = "CLS";
+						I.F = "00E0";
+						break;
+					case 0x0ee:
+						I.D = "Returns from subroutine.";
+						I.C = "RET";
+						I.F = "00EE";
+						break;
+				}
+				break;
+
+			case 0x1000:
+				I.C = "JP";
+				I.D = "Jumps to address NNN.";
+				I.F = "1NNN";
+				break;
+
+			case 0x2000:
+				I.C = "CALL";
+				I.D = "Calls subroutine at NNN."
+				I.F = "2NNN";
+				break;
+
+			case 0x3000:
+				I.C = "SE";
+				I.D = "Skips the next instruction if VX equals NN.";
+				I.F = "3XNN";
+				break;
+
+			case 0x4000:
+				I.C = "SNE";
+				I.D = "Skips the next instruction if VX doesn't equal NN.";
+				I.F = "4XNN";
+				break;
+
+			case 0x5000:
+				I.C = "SE";
+				I.D = "Skips the next instruction if VX equals VY.";
+				I.F = "5XY0";
+				break;
+
+			case 0x6000:
+				I.C = "LD";
+				I.D = "Sets VX to NN.";
+				I.F = "6XNN";
+				break
+
+			case 0x7000:
+				I.D = "Adds NN to VX.";
+				I.C = "ADD";
+				I.F = "7XNN";
+				break;
+
+			case 0x8000:
+				var Z = (op & 0xf);
+				switch(Z) {
+					case 0x0:
+						I.D = "Sets VX to the value of VY.";
+						I.C = "LD";
+						I.F = "8XY0";
+						break;
+					case 0x1:
+						I.D = "Sets VX to VX or VY."
+						I.C = "OR";
+						I.F = "8XY1";
+						break;
+					case 0x2:
+						I.D = "Sets VX to VX and VY.";
+						I.C = "AND";
+						I.F = "8XY2";
+						break;
+					case 0x3:
+						I.D = "Sets VX to VX xor VY.";
+						I.D = "XOR";
+						I.F = "8XY3";
+						break;
+					case 0x4:
+						I.D = "Adds VY to VX. VF is set to 1 when there's a carry, and to 0 when there isn't.";
+						I.C = "ADD";
+						I.F = "8XY4";
+						break;
+					case 0x5:
+						I.D = "VY is subtracted from VX. VF is set to 0 when there's a borrow, and 1 when there isn't.";
+						I.C = "SUB";
+						I.F = "8XY5";
+						break;
+					case 0x6:
+						I.D = "Shifts VX right by one. VF is set to the value of the least significant bit of VX before the shift.";
+						I.C = "SHR";
+						I.F = "8XY6";
+						break;
+					case 0x7:
+						I.D = "Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there isn't.";
+						I.C = "SUBN";
+						I.F = "8XY7";
+						break;
+					case 0xe:
+						I.D = "Shifts VX left by one. VF is set to the value of the most significant bit of VX before the shift.";
+						I.C = "SHL";
+						I.F = "8XYE";
+						break;
+					default:
+						break;
+				}
+				break;
+
+			case 0x9000:
+				I.D = "Skips the next instruction if VX doesn't equal VY.";
+				I.C = "SNE";
+				I.F = "9XY0";
+				break;
+
+			case 0xa000:
+				I.D = "Sets I to the address NNN.";
+				I.C = "LD";
+				I.F = "ANNN";
+				break;
+
+			case 0xb000:
+				I.C = "JP";
+				I.D = "Jumps to the address NNN plus V0.";
+				I.F = "BNNN";
+				break;
+
+			case 0xc000:
+				I.D = "Sets VX to a random number and NN.";
+				I.C = "RND";
+				I.F = "CXNN";
+				break;
+
+			case 0xd000:
+				I.D = "Draw";
+				I.C = "DRW";
+				I.F = "DXYN";
+				break;
+
+			case 0xe000: // 0xEX9E Skips the next instruction if the key stored in VX is pressed. 0xEXA1 if it isnt.
+				if ((op & 0xff) == 0x9e) {
+					I.C="SKP";
+					I.F="EX9E";
+					I.D="Skips the next instruction if the key stored in VX is pressed.";
+				} else {
+					I.C="SKNP";
+					I.F="EXA1";
+					I.D="Skips the next instruction if the key stored in VX isn't pressed.";
+				}
+				break;
+
+			case 0xf000: /* F block is a collection of random instructions */
+				var SI = op & 0xff;
+				switch (SI)	{
+
+					case 0x07:
+						I.C = "LD";
+						I.D = "Sets VX to the value of the delay timer.";
+						I.F = "FX07";
+						break;
+
+					case 0x0a:
+						I.C = "LD";
+						I.D = "A key press is awaited, and then stored in VX.";
+						I.F = "FX0A";
+						break;
+
+					case 0x15:
+						I.C = "LD";
+						I.D = "Sets the delay timer to VX. (Timer is 60hz)";
+						I.F = "FX15";
+						break;
+
+					case 0x18:
+						I.C = "LD";
+						I.D = "Sets the sond timer to VX. (Timer is 60hz)";
+						I.F = "FX18";
+						break;
+
+					case 0x1e:
+						I.C = "ADD";
+						I.D = "Adds VX to I.";
+						I.F = "FX1E";
+						break;
+
+					case 0x29:
+						I.C = "LD";
+						I.D = "Sets I to the location of the sprite for the character in VX.";
+						I.D += "Characters 0-F (in hexadecimal) are represented by a 4x5 font.";
+						I.F = "FX29";
+						break;
+
+					case 0x33:
+						I.C = "LD";
+						I.D += "Stores the Binary-coded decimal representation of VX, with the most significant of three digits";
+						I.D += "at the address in I, the middle digit at I plus 1, and the least significant digit at I plus 2.";
+						I.D += "(In other words, take the decimal representation of VX, place the hundreds digit in memory at location in I,";
+						I.D += "the tens digit at location I+1, and the ones digit at location I+2.)";
+						I.F = "FX33";
+						break;
+
+					case 0x55:
+						I.C = "LD";
+						I.D = "Stores V0 to VX in memory starting at address I.";
+						I.F = "FX55";
+						break;
+
+					case 0x65:
+						I.C = "LD";
+						I.D = "Fills V0 to VX with values from memory starting at address I.";
+						I.F = "FX65";
+						break;
+				}
+				break;
+
+		}
+		buf += "<span class='pc'>0x" + hex(op, 4)  + "</span>"
+		buf += "<span class='pc'> "  + (I.C != undefined ? I.C : "") + " " + (I.F != undefined ? I.F : "") + "</span>";
+	}
+	document.getElementById("disasm").innerHTML = buf;
 
 }
 

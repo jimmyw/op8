@@ -24,6 +24,12 @@ canvas {
 	margin: 10px;
 }
 
+#disasm {
+	float: left;
+	margin: 10px;
+}
+
+
 .footer {
 	margin: 10px;
 	float: left;

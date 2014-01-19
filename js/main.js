@@ -224,23 +224,23 @@ chip8.prototype.step = function() {
 					this.V[X] ^= this.V[Y];
 					break;
 				case 0x4: // Adds VY to VX. VF is set to 1 when there's a carry, and to 0 when there isn't.
-					this.V[0xf] = (this.V[X] + this.V[Y]) > 0xFF ? 1 : 0;
+					this.V[0xf] = (this.V[X] + this.V[Y]) > 0xFF;
 					this.V[X] += this.V[Y];
 					break;
 				case 0x5: // VY is subtracted from VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
-					this.V[0xf] = this.V[Y] < this.V[X] ? 1 : 0;
+					this.V[0xf] = this.V[Y] < this.V[X];
 					this.V[X] -= this.V[Y];
 					break;
 				case 0x6: // Shifts VX right by one. VF is set to the value of the least significant bit of VX before the shift.
-					this.V[0xf] = this.V[X] & 0x1 ? 1 : 0;
+					this.V[0xf] = this.V[X] & 0x1;
 					this.V[X] >>= 1;
 					break;
 				case 0x7: // Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
-					this.V[0xf] = this.V[Y] > this.V[X] ? 1 : 0;
+					this.V[0xf] = this.V[Y] > this.V[X];
 					this.V[X] = V[Y] - V[X];
 					break;
 				case 0xe: // Shifts VX left by one. VF is set to the value of the most significant bit of VX before the shift.
-					this.V[0xF] = (this.V[X] & 0x80) ? 1 : 0;
+					this.V[0xF] = this.V[X] & 0x80;
 					this.V[X] <<= 1;
 					break;
 				default:

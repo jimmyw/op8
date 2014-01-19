@@ -107,13 +107,14 @@ chip8.prototype.start = function(speed) {
 	this.tick_interval = setInterval(this.run.bind(this), speed);
 	if (speed <= 100) {
 		this.dump_interval = setInterval(this.dump_memory.bind(this), 1000);
-		this.dump_interval = setInterval(this.disasm.bind(this), 1000);
+		this.disasm = setInterval(this.disasm.bind(this), 1000);
 	}
 }
 
 chip8.prototype.stop = function() {
 	clearInterval(this.tick_interval);
 	clearInterval(this.dump_interval);
+	clearInterval(this.disasm);
 	this.speed = 0;
 }
 
@@ -147,22 +148,15 @@ chip8.prototype.step = function() {
 	switch (op & 0xF000) {
 		case 0x0000:
 			switch(op) {
-				case 0x0ee: // Returns from subroutine.
-					/*console.log(
-						hex(this.pc),
-						hex(op),
-						"return",
-						hex(this.S[this.sp-1])
-					);*/
-					this.pc = this.S[--this.sp];
-					this.S[this.sp] = 0x0;
-					break;
 				case 0x0e0: // Clears the screen.
 					this.G = new Uint8Array(64 * 32);
 					this.context.fillStyle = 'black';
 					this.context.fillRect(0, 0, this.zoom * 64, this.zoom * 32);
 					break;
-
+				case 0x0ee: // Returns from subroutine.
+					this.pc = this.S[--this.sp];
+					this.S[this.sp] = 0x0;
+					break;
 				default:
 					console.log("Bad op: " + hex(op, 4));
 					this.pc = 0xf000;
@@ -171,22 +165,10 @@ chip8.prototype.step = function() {
 			break;
 
 		case 0x1000: //Jumps to address NNN.
-			/*console.log(
-				hex(this.pc),
-				hex(op),
-				"Jump to inst",
-				hex(op & 0xfff)
-			);*/
 			this.pc = op & 0xfff;
 			return
 
 		case 0x2000: // Calls subroutine at NNN.
-			/*console.log(
-				hex(this.pc),
-				hex(op),
-				"Call subroutine at",
-				hex(op & 0xfff)
-			);*/
 			this.S[this.sp++] = this.pc;
 			this.pc = op & 0xfff;
 			return
@@ -194,15 +176,6 @@ chip8.prototype.step = function() {
 		case 0x3000: // Skips the next instruction if VX equals NN.
 			var X = (op & 0xf00) >> 8;
 			var NN = op & 0xff;
-			/*console.log(
-				hex(this.pc),
-				hex(op),
-				"compare",
-				"V"+X,
-				hex(this.V[X]),
-				"TO",
-				hex(NN)
-			);*/
 			if (this.V[X] == NN)
 				this.pc+=2;
 			break;
@@ -210,15 +183,6 @@ chip8.prototype.step = function() {
 		case 0x4000: // Skips the next instruction if VX doesn't equal NN.
 			var X = (op & 0xf00) >> 8;
 			var NN = op & 0xff;
-			/*console.log(
-				hex(this.pc),
-				hex(op),
-				"compare ne",
-				"V"+X,
-				hex(this.V[X]),
-				"TO",
-				hex(NN)
-			);*/
 			if (this.V[X] != NN)
 				this.pc+=2;
 			break;
@@ -226,16 +190,6 @@ chip8.prototype.step = function() {
 		case 0x5000: // Skips the next instruction if VX equals VY.
 			var X = (op & 0xf00) >> 8;
 			var Y = (op & 0xf0) >> 4;
-			/*console.log(
-				hex(this.pc),
-				hex(op),
-				"compare vx vy",
-				"V"+X,
-				"V"+Y,
-				hex(this.V[X]),
-				"TO",
-				hex(NN)
-			);*/
 			if (this.V[X] == this.V[Y])
 				this.pc+=2;
 			break;
@@ -243,30 +197,12 @@ chip8.prototype.step = function() {
 		case 0x6000: // Sets VX to NN.
 			var X = (op & 0xf00) >> 8;
 			var NN = op & 0xff;
-			/*console.log(
-				hex(this.pc),
-				hex(op),
-				"Set V",
-				X,
-				"TO",
-				hex(NN)
-			);*/
 			this.V[X] = NN;
 			break
 
 		case 0x7000: // Adds NN to VX.
 			var NN = op & 0xff;
 			var X = (op & 0xf00) >> 8;
-			/*console.log(
-				hex(this.pc),
-				hex(op),
-				"ADD",
-				hex(NN),
-				"TO X",
-				X,
-				"VX",
-				hex(this.V[X])
-			);*/
 			this.V[X] += NN;
 			break;
 
@@ -288,7 +224,7 @@ chip8.prototype.step = function() {
 					this.V[X] ^= this.V[Y];
 					break;
 				case 0x4: // Adds VY to VX. VF is set to 1 when there's a carry, and to 0 when there isn't.
-					this.V[0xf] = this.V[Y] > (0xFF - this.V[X]) ? 1 : 0;
+					this.V[0xf] = (this.V[X] + this.V[Y]) > 0xFF ? 1 : 0;
 					this.V[X] += this.V[Y];
 					break;
 				case 0x5: // VY is subtracted from VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
@@ -300,11 +236,11 @@ chip8.prototype.step = function() {
 					this.V[X] >>= 1;
 					break;
 				case 0x7: // Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
-					this.V[0xf] = this.V[X] > this.V[Y] ? 0 : 1;
+					this.V[0xf] = this.V[Y] > this.V[X] ? 1 : 0;
 					this.V[X] = V[Y] - V[X];
 					break;
 				case 0xe: // Shifts VX left by one. VF is set to the value of the most significant bit of VX before the shift.
-					this.V[0xF] = this.V[X] >> 7;
+					this.V[0xF] = this.V[X] & 0x80 ? 1 : 0;
 					this.V[X] <<= 1;
 					break;
 				default:
@@ -322,12 +258,6 @@ chip8.prototype.step = function() {
 			break;
 
 		case 0xa000: // Sets I to the address NNN.
-			/*console.log(
-				hex(this.pc),
-				hex(op),
-				"Set I TO",
-				hex(op & 0xfff)
-			);*/
 			this.I = op & 0xfff;
 			break
 
@@ -339,15 +269,7 @@ chip8.prototype.step = function() {
 		case 0xc000: //Sets VX to a random number and NN.
 			var X = (op & 0x0f00) >> 8;
 			var NN = op & 0xff;
-			this.V[X] = parseInt((Math.random() * 0xff) -1) & NN
-			/*console.log(
-				hex(this.pc),
-				hex(op),
-				"Returning random number",
-				"V" + X,
-				hex(NN),
-				hex(this.V[X])
-			);*/
+			this.V[X] = Math.floor(Math.random() * 0xFF) & NN;
 			break
 
 		/*
@@ -361,14 +283,6 @@ chip8.prototype.step = function() {
 			var X = this.V[(op & 0x0f00) >> 8];
 			var Y = this.V[(op & 0x00f0) >> 4];
 			var H = (op & 0x000f);
-			/*console.log(
-				hex(this.pc),
-				hex(op),
-				"Draw sprite cordinate",
-				X,
-				Y,
-				"width 8 height",
-				H);*/
 			for (var yline = 0; yline < H; yline++) {
 				var pixel = this.M[this.I + yline];
 				for (var xline = 0; xline < 8; xline++) {
@@ -391,16 +305,6 @@ chip8.prototype.step = function() {
 		case 0xe000: // 0xEX9E Skips the next instruction if the key stored in VX is pressed. 0xEXA1 if it isnt.
 			var X = (op & 0xf00) >> 8;
 			var NN = op & 0xff;
-			/*
-			console.log(
-				hex(this.pc),
-				hex(op),
-				NN == 0x9e ? "keyboard compare" : "keybard N compare",
-				"V"+X,
-				this.V[X],
-				hex(this.V[X], 1),
-				this.keyboard[this.V[X]]
-			);*/
 			if (!(NN == 0x9e ^ this.keyboard[this.V[X]]))
 				this.pc+=2;
 			break;
@@ -418,15 +322,6 @@ chip8.prototype.step = function() {
 					} else {
 						this.V[X] = 0;
 					}
-					/*console.log(
-						hex(this.pc),
-						hex(op),
-						"Getting timer",
-						"V" + X,
-						"time_left",
-						this.V[X]
-					);*/
-
 					break;
 
 				case 0x0a: //A key press is awaited, and then stored in VX.
@@ -454,34 +349,14 @@ chip8.prototype.step = function() {
 				case 0x15: //Sets the delay timer to VX. (Timer is 60hz)
 					var VX = this.V[X];
 					this.timer = parseInt(new Date().getTime() + (VX * 16.666))
-					/*console.log(
-						hex(this.pc),
-						hex(op),
-						"Setting timer to",
-						(VX * 16.666) + "ms"
-					);*/
 					break;
 
 				case 0x18: //Sets the sond timer to VX. (Timer is 60hz)
 					var VX = this.V[X];
 					this.sound_timer = parseInt(new Date().getTime() + (VX * 16.666))
-					/*console.log(
-						hex(this.pc),
-						hex(op),
-						"Setting sound timer to",
-						(VX * 16.666) + "ms"
-					);*/
 					break;
 
 				case 0x1e: // Adds VX to I.
-					/*console.log(
-						hex(this.pc),
-						hex(op),
-						"add",
-						"V" + X,
-						hex(this.V[X]),
-						hex(this.I)
-					)*/
 					this.V[0xf] = (this.I + this.V[X]) > 0xfff ? 1 : 0;
 					this.I += this.V[X];
 					break;
@@ -494,16 +369,6 @@ chip8.prototype.step = function() {
 					var vx = this.V[X];
 					// Fonts are stored at offset 0, with 5 alignment
 					this.I = vx * 5;
-					/*console.log(
-						hex(this.pc),
-						hex(op),
-						"Register",
-						X,
-						"Value",
-						hex(vx),
-						"To font addr addr",
-						hex(this.I)
-					)*/
 					break;
 				/*
 				 * Stores the Binary-coded decimal representation of VX, with the most significant of three digits
@@ -515,54 +380,20 @@ chip8.prototype.step = function() {
 					this.M[this.I]     = parseInt(this.V[X] / 100);
 					this.M[this.I + 1] = parseInt(this.V[X] / 10) % 10;
 					this.M[this.I + 2] = parseInt(this.V[X] % 100) % 10;
-					/*
-					console.log(
-						hex(this.pc),
-						hex(op),
-						"X",
-						"Binary decimal split",
-						this.V[X],
-						"IND",
-						hex(this.I),
-						"VALS",
-						this.M[this.I],
-						this.M[this.I+1],
-						this.M[this.I+2]);*/
-
 					break;
 
 				case 0x55: // Stores V0 to VX in memory starting at address I.
 					for (var i=0; i <= X; i++) {
 						this.M[this.I + i] = this.V[i]
 					}
-					/*console.log(
-						hex(this.pc),
-						hex(op),
-						"Write memory to register",
-						"I" + hex(this.I),
-						"X" + hex(X),
-						this.M.subarray(this.I, this.I + X + 1),
-						this.V
-					);*/
-					this.I += X + 1;
+					//ONLY DONE BY SOME EMUS this.I += X + 1;
 
 					break;
 
 				case 0x65: // Fills V0 to VX with values from memory starting at address I.
 					for (var i = 0; i <= X; i++)
 						this.V[i] = this.M[this.I+i]
-					/*console.log(
-						hex(this.pc),
-						hex(op),
-						"Fill Register from index",
-						"I",
-						hex(this.I),
-						"X",
-						hex(X),
-						this.M.subarray(this.I, this.I + X),
-						this.V
-					);*/
-					this.I += X + 1;
+					// ALSO ONLY DONE SOMETIMES. this.I += X + 1;
 					break;
 				default:
 					found=0;
@@ -634,14 +465,11 @@ chip8.prototype.dump_memory = function() {
 
 chip8.prototype.disasm = function() {
 	var buf = "";
-	for (var i=0x200; i < (0x200 + this.program.length); i+=2) {
+	for (var i=0x200 + (this.pc % 2); i < (0x200 + this.program.length); i+=2) {
 		if (i == this.pc || i == this.pc + 1) {
 			buf+="\n <span class='index'>" + hex(i, 4) + "</span> ";
 		} else {
 			buf+="\n <span class='head'>" + hex(i, 4) + "</span> ";
-		}
-		if (i % 2 == 1) {
-			continue;
 		}
 		var op = this.M[i] << 8 | this.M[i + 1];
 		I = {D: "", C: "", F: ""};

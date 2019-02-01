@@ -100,20 +100,22 @@ function chip8(program) {
 chip8.prototype.start = function(speed) {
 	clearInterval(this.tick_interval);
 	clearInterval(this.dump_interval);
-	clearInterval(this.disasm);
+	clearInterval(this.disasm_interval);
 	// Start timers
 	this.speed = speed
 	this.tick_interval = setInterval(this.run.bind(this), speed);
 	if (speed <= 100) {
 		this.dump_interval = setInterval(this.dump_memory.bind(this), 1000);
-		this.disasm = setInterval(this.disasm.bind(this), 1000);
+		this.disasm_interval = setInterval(this.disasm.bind(this), 1000);
 	}
 }
 
 chip8.prototype.stop = function() {
 	clearInterval(this.tick_interval);
 	clearInterval(this.dump_interval);
-	clearInterval(this.disasm);
+	clearInterval(this.disasm_interval);
+	this.dump_memory();
+	this.disasm();
 	this.speed = 0;
 }
 
@@ -432,14 +434,12 @@ chip8.prototype.d = function(mem) {
 				type = "pc";
 			else if (i == this.I)
 				type = "index";
-			else if (i >= 0x050 && i < 0x0a0)
-				type = "pixel_font_set";
-			else if (i <= 0x1ff)
+			else if (i < this.fontset.length)
 				type = "font_set";
 			else if (i >= 0x200 && i < 0x200 + this.program.length)
 				type = "program";
 		}
-		buf+= "<span class='" + type + "'>" + hex(mem[i]) + " </span>";
+		buf+= "<span class='" + type + "' title='" + type + "'>" + hex(mem[i]) + " </span>";
 	}
 	return buf + "\n";
 }
